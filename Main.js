@@ -29,11 +29,11 @@ LaunchBot.LoadCommands = () => {
   //LaunchBot.commands["NextLaunch"] = require('./commands/NextLaunch.js');
 }
 
-LaunchBot.FireMatchingCommands = (commandAlias, commandPrefix, commandArgs, LaunchBot, messageData)  => {
+LaunchBot.FireMatchingCommands = (commandAlias, commandPrefix, commandSwitches, commandArgs, LaunchBot, messageData)  => {
   commands["NextLaunch"] = require('./commands/NextLaunch.js');
   for (var key in commands) {
     if (commands[key].aliases.indexOf(commandAlias) > -1) {
-      commands[key].run(LaunchBot, commandPrefix, commandAlias, commandArgs, messageData)
+      commands[key].run(LaunchBot, commandPrefix, commandAlias, commandSwitches, commandArgs, messageData)
     }
   }
 }
@@ -44,6 +44,11 @@ LaunchBot.DiscordClient.on('ready', () => {
   LaunchBot.LoadCommands();
 });
 
+/* Basic error handling so we can actually get information on the error, if and when one happens instead of node.js's absolutely abysmal stacktraces */
+LaunchBot.DiscordClient.on("error", (e) => console.error(e));
+LaunchBot.DiscordClient.on("warn", (e) => console.warn(e));
+LaunchBot.DiscordClient.on("debug", (e) => console.info(e));
+
 LaunchBot.DiscordClient.on('message', message => {
   if (LaunchBot.DiscordClient.user.id == message.author.id) { return; } // Don't fire anything if the user sending the message is the bot
   //console.log(`${message.author.username}: ${message.content}`);
@@ -51,6 +56,10 @@ LaunchBot.DiscordClient.on('message', message => {
   if (LaunchBot.config.commandTriggerCharacters.includes(cmdPrefix)) {
     var commandData = message.content.slice(1).split(" ");
     var commandName = commandData.shift();
+    var commandSwitches = undefined;
+    if (commandData != undefined && commandData[0] != undefined && commandData[0].startsWith("-")) {
+      var commandSwitches = commandData.shift().substr(1);
+    }
     if (new Array("reloadcommands", "rla").indexOf(commandName) > -1 && LaunchBot.IsUserAdmin(message.author.id)) {
       LaunchBot.LoadCommands();
       return;
@@ -59,7 +68,7 @@ LaunchBot.DiscordClient.on('message', message => {
       LaunchBot.DiscordClient.destroy();
       process.exit();
     }
-    LaunchBot.FireMatchingCommands(commandName, cmdPrefix, commandData, this, message);
+    LaunchBot.FireMatchingCommands(commandName, cmdPrefix, commandSwitches, commandData, this, message);
   }
 });
 

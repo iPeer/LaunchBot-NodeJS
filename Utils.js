@@ -24,7 +24,7 @@ module.exports = {
     return outStr;
   },
   pad: pad,
-  getWindowString: function(launch) {
+  getWindowString: function(launch, oldFormat = false, appendUTC = false) {
     if (launch.delayed || launch.monthonlyeta) return "Unknown";
 
     var open = launch.windowopens_epoch;
@@ -47,7 +47,7 @@ module.exports = {
     if (wString.endsWith(":00"))
       wString = wString.substr(0, wString.length - 3);
 
-    return dateStr1+"—"+dateStr2+"\n("+wString+")";
+    return dateStr1+"—"+dateStr2+(!oldFormat ? "\n" : "")+(appendUTC ? " UTC " : "")+"("+wString+")";
   },
   getCountdownTime: getCountdownTime,
   getCountdownDay: getCountdownDay,
